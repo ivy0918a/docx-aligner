@@ -748,147 +748,243 @@ document.getElementById(
     "click",
     async function () {
 
-        const {
-            Document,
-            Paragraph,
-            TextRun,
-            Packer
-        } = window.docx;
+        const button =
+            document.getElementById(
+                "downloadDocx"
+            );
 
+        button.disabled = true;
 
-        const children = [];
+        status.textContent =
+            "正在製作 DOCX……";
 
+        try {
 
-        children.push(
-            new Paragraph({
-                children: [
-                    new TextRun({
-                        text:
-                        "雙語段落對照版",
-                        bold: true,
-                        size: 32
-                    })
-                ]
-            })
-        );
-
-
-        pairs.forEach(
-            function (pair, index) {
-
-                children.push(
-                    new Paragraph({
-                        children: [
-                            new TextRun({
-                                text:
-                                "譯文 " +
-                                (index + 1),
-                                bold: true
-                            })
-                        ]
-                    })
+            if (
+                !window.docx ||
+                !window.docx.Document ||
+                !window.docx.Packer
+            ) {
+                throw new Error(
+                    "DOCX 製作程式沒有成功載入，請重新整理網頁後再試一次。"
                 );
-
-
-                children.push(
-                    new Paragraph({
-                        text:
-                        pair[0] ||
-                        "（沒有對應段落）"
-                    })
-                );
-
-
-                children.push(
-                    new Paragraph({
-                        children: [
-                            new TextRun({
-                                text:
-                                "譯文 " +
-                                (index + 1),
-                                bold: true
-                            })
-                        ]
-                    })
-                );
-
-
-                children.push(
-                    new Paragraph({
-                        text:
-                        pair[1] ||
-                        "（沒有對應段落）"
-                    })
-                );
-
-
-                children.push(
-                    new Paragraph({
-                        text: ""
-                    })
-                );
-
             }
-        );
+
+            const {
+                Document,
+                Paragraph,
+                TextRun,
+                Packer
+            } = window.docx;
 
 
-        const document =
-            new Document({
-                sections: [
-                    {
-                        properties: {},
-                        children:
-                            children
-                    }
-                ]
-            });
+            const children = [];
 
 
-        const blob =
-            await Packer.toBlob(
-                document
+            children.push(
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text:
+                                "雙語段落對照版",
+                            bold: true,
+                            size: 32
+                        })
+                    ]
+                })
             );
 
 
-        downloadFile(
-            blob,
-            "雙語段落對照版.docx"
-        );
+            pairs.forEach(
+                function (pair, index) {
+
+                    children.push(
+                        new Paragraph({
+                            text:
+                                pair[0] ||
+                                "（沒有對應段落）"
+                        })
+                    );
+
+
+                    children.push(
+                        new Paragraph({
+                            text:
+                                pair[1] ||
+                                "（沒有對應段落）"
+                        })
+                    );
+
+
+                    children.push(
+                        new Paragraph({
+                            text: ""
+                        })
+                    );
+
+                }
+            );
+
+
+            const document =
+                new Document({
+                    sections: [
+                        {
+                            properties: {},
+                            children:
+                                children
+                        }
+                    ]
+                });
+
+
+            status.textContent =
+                "正在產生 DOCX 檔案……";
+
+
+            const blob =
+                await Packer.toBlob(
+                    document
+                );
+
+
+            const filename =
+                getOutputFileName();
+
+
+            const file =
+                new File(
+                    [blob],
+                    filename,
+                    {
+                        type:
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    }
+                );
+
+
+            /*
+             * iPhone / iPad：
+             * 優先使用系統分享功能
+             */
+            if (
+                navigator.share &&
+                navigator.canShare &&
+                navigator.canShare({
+                    files: [file]
+                })
+            ) {
+
+                status.textContent =
+                    "正在開啟分享／儲存選單……";
+
+
+                await navigator.share({
+                    files: [file],
+                    title: filename
+                });
+
+
+                status.textContent =
+                    "完成！請選擇「儲存到檔案」。";
+
+
+            } else {
+
+                /*
+                 * 電腦：
+                 * 使用一般下載
+                 */
+
+                const url =
+                    URL.createObjectURL(
+                        blob
+                    );
+
+
+                const link =
+                    document.createElement(
+                        "a"
+                    );
+
+
+                link.href = url;
+
+                link.download =
+                    filename;
+
+                link.style.display =
+                    "none";
+
+
+                document.body.appendChild(
+                    link
+                );
+
+
+                link.click();
+
+
+                document.body.removeChild(
+                    link
+                );
+
+
+                setTimeout(
+                    function () {
+
+                        URL.revokeObjectURL(
+                            url
+                        );
+
+                    },
+                    5000
+                );
+
+
+                status.textContent =
+                    "下載已開始：" +
+                    filename;
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "DOCX 匯出錯誤：",
+                error
+            );
+
+
+            if (
+                error.name ===
+                "AbortError"
+            ) {
+
+                status.textContent =
+                    "已取消儲存。";
+
+            } else {
+
+                status.textContent =
+                    "DOCX 匯出失敗：\n\n" +
+                    error.message;
+
+            }
+
+        }
+
+        finally {
+
+            button.disabled = false;
+
+        }
 
     }
 );
-
-
-function downloadFile(
-    blob,
-    filename
-) {
-
-    const url =
-        URL.createObjectURL(blob);
-
-    const a =
-        document.createElement("a");
-
-    a.href = url;
-
-    a.download = filename;
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    a.remove();
-
-    setTimeout(
-        function () {
-            URL.revokeObjectURL(url);
-        },
-        1000
-    );
-
-}
-
+      
 </script>
 
 </body>
