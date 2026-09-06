@@ -708,36 +708,156 @@ document.getElementById(
     "click",
     function () {
 
-        let output = "";
+        const button =
+            document.getElementById(
+                "downloadTxt"
+            );
 
-        pairs.forEach(
-            function (pair, index) {
+        button.disabled = true;
 
-                output +=
-                    pair[0] ||
-                    "（沒有對應段落）";
+        try {
 
-                output += "\n\n";
+            let output = "";
 
+            pairs.forEach(
+                function (pair) {
 
-                output +=
-                    pair[1] ||
-                    "（沒有對應段落）";
+                    // 原文
+                    output +=
+                        pair[0] ||
+                        "（沒有對應段落）";
 
-                output += "\n\n\n";
+                    output += "\n\n";
 
-            }
-        );
+                    // 譯文
+                    output +=
+                        pair[1] ||
+                        "（沒有對應段落）";
 
+                    output += "\n\n\n";
 
-        const blob =
-            new Blob(
-                ["\ufeff" + output],
-                {
-                    type:
-                    "text/plain;charset=utf-8"
                 }
             );
+
+
+            // 建立 TXT 檔案
+            const blob =
+                new Blob(
+                    ["\ufeff" + output],
+                    {
+                        type:
+                            "text/plain;charset=utf-8"
+                    }
+                );
+
+
+            // TXT 檔名使用：
+            // 原文檔名_譯文檔名.txt
+            const sourceName =
+                sourceFile.files[0].name;
+
+            const targetName =
+                targetFile.files[0].name;
+
+
+            const sourceBase =
+                sourceName.replace(
+                    /\.docx$/i,
+                    ""
+                );
+
+            const targetBase =
+                targetName.replace(
+                    /\.docx$/i,
+                    ""
+                );
+
+
+            const safeSource =
+                sourceBase.replace(
+                    /[\/\\:*?"<>|]/g,
+                    "_"
+                );
+
+            const safeTarget =
+                targetBase.replace(
+                    /[\/\\:*?"<>|]/g,
+                    "_"
+                );
+
+
+            const filename =
+                safeSource +
+                "_" +
+                safeTarget +
+                ".txt";
+
+
+            // 建立下載連結
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+            link.href = url;
+            link.download = filename;
+            link.style.display = "none";
+
+
+            document.body.appendChild(
+                link
+            );
+
+            link.click();
+
+            document.body.removeChild(
+                link
+            );
+
+
+            // 清理暫存 URL
+            setTimeout(
+                function () {
+
+                    URL.revokeObjectURL(
+                        url
+                    );
+
+                },
+                5000
+            );
+
+
+            status.textContent =
+                "TXT 下載已開始：\n" +
+                filename;
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "TXT 匯出錯誤：",
+                error
+            );
+
+            status.textContent =
+                "TXT 匯出失敗：\n\n" +
+                error.message;
+
+        }
+
+        finally {
+
+            button.disabled = false;
+
+        }
+
     }
 );
 
