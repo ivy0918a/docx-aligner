@@ -445,6 +445,53 @@ function escapeHTML(text) {
 }
 
 
+function getOutputFileName() {
+
+    const sourceName =
+        sourceFile.files[0].name;
+
+    const targetName =
+        targetFile.files[0].name;
+
+
+    // 去掉 .docx
+    const sourceBase =
+        sourceName.replace(
+            /\.docx$/i,
+            ""
+        );
+
+    const targetBase =
+        targetName.replace(
+            /\.docx$/i,
+            ""
+        );
+
+
+    // 避免檔名出現不能使用的符號
+    const safeSource =
+        sourceBase.replace(
+            /[\/\\:*?"<>|]/g,
+            "_"
+        );
+
+    const safeTarget =
+        targetBase.replace(
+            /[\/\\:*?"<>|]/g,
+            "_"
+        );
+
+
+    return (
+        safeSource +
+        "_" +
+        safeTarget +
+        ".docx"
+    );
+
+}
+
+      
 compareButton.addEventListener(
     "click",
     async function () {
@@ -691,13 +738,6 @@ document.getElementById(
                     "text/plain;charset=utf-8"
                 }
             );
-
-
-        downloadFile(
-            blob,
-            "雙語段落對照.txt"
-        );
-
     }
 );
 
