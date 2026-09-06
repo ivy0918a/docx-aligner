@@ -516,7 +516,7 @@ compareButton.addEventListener(
                         <div>
 
                             <div class="language-label">
-                                韓文原文
+                                原文
                             </div>
 
                             <div class="text ${extraClass}">
@@ -531,7 +531,7 @@ compareButton.addEventListener(
                         <div>
 
                             <div class="language-label">
-                                中文翻譯
+                                譯文
                             </div>
 
                             <div class="text ${extraClass}">
@@ -563,11 +563,11 @@ compareButton.addEventListener(
             stats.innerHTML = `
 
                 <span class="badge">
-                    韓文：${sourceParagraphs.length} 段
+                    原文：${sourceParagraphs.length} 段
                 </span>
 
                 <span class="badge">
-                    中文：${targetParagraphs.length} 段
+                    譯文：${targetParagraphs.length} 段
                 </span>
 
                 <span class="badge">
@@ -667,7 +667,7 @@ document.getElementById(
             function (pair, index) {
 
                 output +=
-                    "【韓文 " +
+                    "【原文 " +
                     (index + 1) +
                     "】\n";
 
@@ -678,7 +678,7 @@ document.getElementById(
                 output += "\n\n";
 
                 output +=
-                    "【中文 " +
+                    "【譯文 " +
                     (index + 1) +
                     "】\n";
 
@@ -704,7 +704,7 @@ document.getElementById(
 
         downloadFile(
             blob,
-            "韓中段落對照.txt"
+            "雙語段落對照.txt"
         );
 
     }
@@ -733,7 +733,7 @@ document.getElementById(
                 children: [
                     new TextRun({
                         text:
-                        "韓中段落對照版",
+                        "雙語段落對照版",
                         bold: true,
                         size: 32
                     })
@@ -750,7 +750,7 @@ document.getElementById(
                         children: [
                             new TextRun({
                                 text:
-                                "韓文 " +
+                                "譯文 " +
                                 (index + 1),
                                 bold: true
                             })
@@ -821,7 +821,7 @@ document.getElementById(
 
         downloadFile(
             blob,
-            "韓中段落對照版.docx"
+            "雙語段落對照版.docx"
         );
 
     }
