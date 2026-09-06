@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,
+      initial-scale=1.0,
+      maximum-scale=1.0,
+      user-scalable=no">
+
+<title>DOCX 韓中段落對照工具</title>
+
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@9.5.1/build/index.umd.js"></script>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f5f6f8;
+    color: #222;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Noto Sans TC",
+        "PingFang TC",
+        "Microsoft JhengHei",
+        sans-serif;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    margin: auto;
+    padding: 18px 12px 50px;
+}
+
+h1 {
+    font-size: 24px;
+    margin: 5px 0 8px;
+}
+
+.description {
+    color: #666;
+    line-height: 1.6;
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid #ddd;
+}
+
+.file-box {
+    border: 2px dashed #bbb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: #fafafa;
+}
+
+.file-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+input[type="file"] {
+    width: 100%;
+    font-size: 15px;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 15px;
+    cursor: pointer;
+    background: #222;
+    color: white;
+    margin-right: 6px;
+    margin-top: 8px;
+}
+
+button.secondary {
+    background: #e9ebee;
+    color: #222;
+}
+
+button:disabled {
+    opacity: 0.45;
+}
+
+.status {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #555;
+    white-space: pre-wrap;
+}
+
+.stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 10px;
+}
+
+.badge {
+    background: #eef0f3;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.warning {
+    background: #fff1c7;
+}
+
+.success {
+    background: #e3f4e8;
+}
+
+.paragraph {
+    border-top: 1px solid #e5e5e5;
+    padding: 14px 0;
+}
+
+.number {
+    font-weight: bold;
+    color: #777;
+    margin-bottom: 7px;
+}
+
+.language-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #777;
+    margin-bottom: 4px;
+}
+
+.text {
+    background: #fafafa;
+    padding: 10px;
+    border-radius: 8px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin-bottom: 10px;
+}
+
+.extra {
+    background: #fff1c7;
+}
+
+.small {
+    font-size: 12px;
+    color: #777;
+    line-height: 1.5;
+}
+
+@media (min-width: 700px) {
+
+    .paragraph-row {
+        display: grid;
+        grid-template-columns: 40px 1fr 1fr;
+        gap: 10px;
+    }
+
+    .paragraph-row .number {
+        padding-top: 8px;
+    }
+
+    .paragraph-row .text {
+        margin-bottom: 0;
+    }
+
+    .paragraph-row .language-label {
+        display: none;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>DOCX 韓中段落對照工具</h1>
+
+<div class="description">
+
+上傳兩個 DOCX。
+工具會讀取兩份文件中的段落，
+按照原本順序一對一配對。
+
+<br><br>
+
+不使用 AI。
+不重新翻譯。
+不分析翻譯內容。
+
+<br><br>
+
+所有文件處理都在你的瀏覽器中進行。
+
+</div>
+
+
+<div class="card">
+
+<div class="file-box">
+
+<div class="file-title">
+① 韓文原文 DOCX
+</div>
+
+<input
+    id="sourceFile"
+    type="file"
+    accept=".docx">
+
+<div
+    id="sourceName"
+    class="small">
+</div>
+
+</div>
+
+
+<div class="file-box">
+
+<div class="file-title">
+② 中文翻譯 DOCX
+</div>
+
+<input
+    id="targetFile"
+    type="file"
+    accept=".docx">
+
+<div
+    id="targetName"
+    class="small">
+</div>
+
+</div>
+
+
+<button
+    id="compareButton"
+    disabled>
+
+開始比較／對齊
+
+</button>
+
+
+<button
+    id="clearButton"
+    class="secondary">
+
+清除
+
+</button>
+
+
+<div
+    id="status"
+    class="status">
+</div>
+
+</div>
+
+
+<div
+    id="resultCard"
+    class="card"
+    hidden>
+
+<div
+    id="stats"
+    class="stats">
+</div>
+
+
+<button
+    id="downloadDocx">
+
+下載對照 DOCX
+
+</button>
+
+
+<button
+    id="downloadTxt"
+    class="secondary">
+
+下載 TXT
+
+</button>
+
+
+<div class="small" style="margin-top:10px">
+
+配對規則：
+
+第 1 段 → 第 1 段  
+第 2 段 → 第 2 段  
+第 3 段 → 第 3 段……
+
+如果兩份文件段落數不同，
+黃色部分代表其中一邊沒有對應段落。
+
+</div>
+
+
+<div id="paragraphList"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let sourceParagraphs = [];
+let targetParagraphs = [];
+let pairs = [];
+
+
+const sourceFile =
+    document.getElementById("sourceFile");
+
+const targetFile =
+    document.getElementById("targetFile");
+
+const compareButton =
+    document.getElementById("compareButton");
+
+const clearButton =
+    document.getElementById("clearButton");
+
+const status =
+    document.getElementById("status");
+
+const resultCard =
+    document.getElementById("resultCard");
+
+const stats =
+    document.getElementById("stats");
+
+const paragraphList =
+    document.getElementById("paragraphList");
+
+
+function updateButton() {
+
+    compareButton.disabled =
+        !sourceFile.files[0] ||
+        !targetFile.files[0];
+
+}
+
+
+sourceFile.addEventListener(
+    "change",
+    function () {
+
+        document.getElementById(
+            "sourceName"
+        ).textContent =
+            sourceFile.files[0]
+            ? sourceFile.files[0].name
+            : "";
+
+        updateButton();
+
+    }
+);
+
+
+targetFile.addEventListener(
+    "change",
+    function () {
+
+        document.getElementById(
+            "targetName"
+        ).textContent =
+            targetFile.files[0]
+            ? targetFile.files[0].name
+            : "";
+
+        updateButton();
+
+    }
+);
+
+
+async function readDocx(file) {
+
+    const arrayBuffer =
+        await file.arrayBuffer();
+
+    const result =
+        await mammoth.extractRawText({
+            arrayBuffer: arrayBuffer
+        });
+
+    let text =
+        result.value
+        .replace(/\r/g, "");
+
+    let paragraphs =
+        text
+        .split(/\n+/)
+        .map(function (p) {
+            return p.trim();
+        })
+        .filter(function (p) {
+            return p.length > 0;
+        });
+
+    return paragraphs;
+}
+
+
+function escapeHTML(text) {
+
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+compareButton.addEventListener(
+    "click",
+    async function () {
+
+        compareButton.disabled = true;
+
+        status.textContent =
+            "正在讀取兩個 DOCX……";
+
+        try {
+
+            sourceParagraphs =
+                await readDocx(
+                    sourceFile.files[0]
+                );
+
+            targetParagraphs =
+                await readDocx(
+                    targetFile.files[0]
+                );
+
+
+            pairs = [];
+
+            const total =
+                Math.max(
+                    sourceParagraphs.length,
+                    targetParagraphs.length
+                );
+
+
+            let html = "";
+
+
+            for (
+                let i = 0;
+                i < total;
+                i++
+            ) {
+
+                const source =
+                    sourceParagraphs[i] || "";
+
+                const target =
+                    targetParagraphs[i] || "";
+
+                pairs.push([
+                    source,
+                    target
+                ]);
+
+
+                const extraClass =
+                    (!source || !target)
+                    ? "extra"
+                    : "";
+
+
+                html += `
+
+                <div class="paragraph">
+
+                    <div class="paragraph-row">
+
+                        <div class="number">
+                            ${i + 1}
+                        </div>
+
+                        <div>
+
+                            <div class="language-label">
+                                韓文原文
+                            </div>
+
+                            <div class="text ${extraClass}">
+                                ${escapeHTML(
+                                    source || "（沒有對應段落）"
+                                )}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="language-label">
+                                中文翻譯
+                            </div>
+
+                            <div class="text ${extraClass}">
+                                ${escapeHTML(
+                                    target || "（沒有對應段落）"
+                                )}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                `;
+
+            }
+
+
+            paragraphList.innerHTML =
+                html;
+
+
+            const same =
+                sourceParagraphs.length ===
+                targetParagraphs.length;
+
+
+            stats.innerHTML = `
+
+                <span class="badge">
+                    韓文：${sourceParagraphs.length} 段
+                </span>
+
+                <span class="badge">
+                    中文：${targetParagraphs.length} 段
+                </span>
+
+                <span class="badge">
+                    配對：${Math.min(
+                        sourceParagraphs.length,
+                        targetParagraphs.length
+                    )} 組
+                </span>
+
+                <span class="badge ${
+                    same
+                    ? "success"
+                    : "warning"
+                }">
+
+                    ${
+                        same
+                        ? "段落數相同"
+                        : "段落數不同，請檢查黃色段落"
+                    }
+
+                </span>
+
+            `;
+
+
+            resultCard.hidden = false;
+
+            status.textContent =
+                "完成！";
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            status.textContent =
+                "讀取 DOCX 失敗。\n\n" +
+                "請確認檔案是正常的 .docx。\n\n" +
+                error.message;
+
+        }
+
+        finally {
+
+            compareButton.disabled = false;
+
+        }
+
+    }
+);
+
+
+clearButton.addEventListener(
+    "click",
+    function () {
+
+        sourceFile.value = "";
+        targetFile.value = "";
+
+        document.getElementById(
+            "sourceName"
+        ).textContent = "";
+
+        document.getElementById(
+            "targetName"
+        ).textContent = "";
+
+        sourceParagraphs = [];
+        targetParagraphs = [];
+        pairs = [];
+
+        resultCard.hidden = true;
+
+        paragraphList.innerHTML = "";
+
+        stats.innerHTML = "";
+
+        status.textContent = "";
+
+        updateButton();
+
+    }
+);
+
+
+document.getElementById(
+    "downloadTxt"
+).addEventListener(
+    "click",
+    function () {
+
+        let output = "";
+
+        pairs.forEach(
+            function (pair, index) {
+
+                output +=
+                    "【韓文 " +
+                    (index + 1) +
+                    "】\n";
+
+                output +=
+                    pair[0] ||
+                    "（沒有對應段落）";
+
+                output += "\n\n";
+
+                output +=
+                    "【中文 " +
+                    (index + 1) +
+                    "】\n";
+
+                output +=
+                    pair[1] ||
+                    "（沒有對應段落）";
+
+                output += "\n\n\n";
+
+            }
+        );
+
+
+        const blob =
+            new Blob(
+                ["\ufeff" + output],
+                {
+                    type:
+                    "text/plain;charset=utf-8"
+                }
+            );
+
+
+        downloadFile(
+            blob,
+            "韓中段落對照.txt"
+        );
+
+    }
+);
+
+
+document.getElementById(
+    "downloadDocx"
+).addEventListener(
+    "click",
+    async function () {
+
+        const {
+            Document,
+            Paragraph,
+            TextRun,
+            Packer
+        } = window.docx;
+
+
+        const children = [];
+
+
+        children.push(
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text:
+                        "韓中段落對照版",
+                        bold: true,
+                        size: 32
+                    })
+                ]
+            })
+        );
+
+
+        pairs.forEach(
+            function (pair, index) {
+
+                children.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text:
+                                "韓文 " +
+                                (index + 1),
+                                bold: true
+                            })
+                        ]
+                    })
+                );
+
+
+                children.push(
+                    new Paragraph({
+                        text:
+                        pair[0] ||
+                        "（沒有對應段落）"
+                    })
+                );
+
+
+                children.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text:
+                                "中文 " +
+                                (index + 1),
+                                bold: true
+                            })
+                        ]
+                    })
+                );
+
+
+                children.push(
+                    new Paragraph({
+                        text:
+                        pair[1] ||
+                        "（沒有對應段落）"
+                    })
+                );
+
+
+                children.push(
+                    new Paragraph({
+                        text: ""
+                    })
+                );
+
+            }
+        );
+
+
+        const document =
+            new Document({
+                sections: [
+                    {
+                        properties: {},
+                        children:
+                            children
+                    }
+                ]
+            });
+
+
+        const blob =
+            await Packer.toBlob(
+                document
+            );
+
+
+        downloadFile(
+            blob,
+            "韓中段落對照版.docx"
+        );
+
+    }
+);
+
+
+function downloadFile(
+    blob,
+    filename
+) {
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+
+    a.download = filename;
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    setTimeout(
+        function () {
+            URL.revokeObjectURL(url);
+        },
+        1000
+    );
+
+}
+
+</script>
+
+</body>
+</html>
